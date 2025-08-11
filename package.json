@@ -13,6 +13,12 @@
     "setup": "tsx scripts/setup-env.ts",
     "start": "next start",
     "test": "jest",
+    "test:e2e": "playwright test",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:ui": "playwright test --ui",
+    "test:install": "playwright install",
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit"
   },
@@ -52,6 +58,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",
     "@types/react": "^19",

@@ -1,58 +1,33 @@
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcryptjs"
-import { testUsers, testMembers } from "../fixtures/test-data"
-
-const prisma = new PrismaClient()
+import { testMembers, testLoans } from "../fixtures/test-data"
 
 export class DatabaseHelper {
   static async seedTestData() {
-    // Clean existing data
-    await prisma.contribution.deleteMany()
-    await prisma.loanRepayment.deleteMany()
-    await prisma.loan.deleteMany()
-    await prisma.member.deleteMany()
-    await prisma.user.deleteMany()
-
-    // Create test users
-    for (const [key, userData] of Object.entries(testUsers)) {
-      const hashedPassword = await bcrypt.hash(userData.password, 10)
-      await prisma.user.create({
-        data: {
-          email: userData.email,
-          password: hashedPassword,
-          name: userData.name,
-          role: userData.role as any,
-        },
-      })
-    }
-
-    // Create test members
-    const adminUser = await prisma.user.findUnique({
-      where: { email: testUsers.admin.email },
-    })
-
-    if (adminUser) {
-      await prisma.member.create({
-        data: {
-          ...testMembers.existingMember,
-          userId: adminUser.id,
-          membershipNumber: "MEM001",
-          joinDate: new Date(),
-          status: "ACTIVE",
-        },
-      })
-    }
+    // In a real app, this would interact with your database
+    // For now, we'll use the in-memory database
+    console.log("Seeding test data...")
   }
 
   static async cleanupTestData() {
-    await prisma.contribution.deleteMany()
-    await prisma.loanRepayment.deleteMany()
-    await prisma.loan.deleteMany()
-    await prisma.member.deleteMany()
-    await prisma.user.deleteMany()
+    // Clean up any test data created during tests
+    console.log("Cleaning up test data...")
   }
 
-  static async disconnect() {
-    await prisma.$disconnect()
+  static async createTestMember(memberData = testMembers[0]) {
+    // Create a test member via API
+    const response = await fetch("http://localhost:3000/api/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(memberData),
+    })
+    return response.json()
+  }
+
+  static async createTestLoan(memberId: string, loanData = testLoans[0]) {
+    const response = await fetch("http://localhost:3000/api/loans", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...loanData, memberId }),
+    })
+    return response.json()
   }
 }

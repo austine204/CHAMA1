@@ -3,29 +3,40 @@ import { cn } from "@/lib/utils"
 
 interface StatusBadgeProps {
   status: string
-  variant?: "default" | "secondary" | "destructive" | "outline"
+  className?: string
 }
 
-const statusConfig = {
-  ACTIVE: { variant: "default" as const, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
-  INACTIVE: { variant: "secondary" as const, className: "bg-gray-100 text-gray-800" },
-  SUSPENDED: { variant: "destructive" as const, className: "bg-red-100 text-red-800 hover:bg-red-100" },
-  PENDING: { variant: "outline" as const, className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-  APPROVED: { variant: "default" as const, className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
-  DISBURSED: { variant: "default" as const, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
-  CLOSED: { variant: "secondary" as const, className: "bg-gray-100 text-gray-800" },
-  IN_ARREARS: { variant: "destructive" as const, className: "bg-red-100 text-red-800 hover:bg-red-100" },
-  CONFIRMED: { variant: "default" as const, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
-  SUCCESS: { variant: "default" as const, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
-  FAILED: { variant: "destructive" as const, className: "bg-red-100 text-red-800 hover:bg-red-100" },
-}
-
-export function StatusBadge({ status }: StatusBadgeProps) {
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING
+export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "ACTIVE":
+      case "APPROVED":
+      case "DISBURSED":
+      case "CONFIRMED":
+      case "COMPLETED":
+        return "bg-green-100 text-green-800 hover:bg-green-100"
+      case "PENDING":
+      case "PROCESSING":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+      case "REJECTED":
+      case "FAILED":
+      case "CANCELLED":
+      case "IN_ARREARS":
+        return "bg-red-100 text-red-800 hover:bg-red-100"
+      case "INACTIVE":
+      case "SUSPENDED":
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+      case "CLOSED":
+      case "MATURED":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+    }
+  }
 
   return (
-    <Badge variant={config.variant} className={cn("font-medium", config.className)}>
-      {status.replace(/_/g, " ")}
+    <Badge className={cn(getStatusColor(status), className)} data-testid="status-badge">
+      {status.replace("_", " ")}
     </Badge>
   )
 }

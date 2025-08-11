@@ -1,65 +1,65 @@
 export const testUsers = {
   admin: {
-    email: "admin@sacco.com",
+    email: "admin@sacco.local",
     password: "admin123",
-    name: "System Administrator",
     role: "ADMIN",
   },
-  manager: {
-    email: "manager@sacco.com",
-    password: "manager123",
-    name: "SACCO Manager",
-    role: "MANAGER",
-  },
   member: {
-    email: "member@sacco.com",
+    email: "member@sacco.local",
     password: "member123",
-    name: "John Doe",
     role: "MEMBER",
   },
 }
 
-export const testMembers = {
-  newMember: {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+254712345678",
-    nationalId: "12345678",
-    address: "123 Test Street, Nairobi",
-  },
-  existingMember: {
-    name: "John Doe",
+export const testMembers = [
+  {
+    memberNumber: "MBR-001",
+    firstName: "John",
+    lastName: "Doe",
+    nationalId: "ID12345678",
+    phone: "0712345678",
     email: "john.doe@example.com",
-    phone: "+254787654321",
-    nationalId: "87654321",
-    address: "456 Sample Avenue, Mombasa",
+    address: "P.O. Box 123, Nairobi",
+    status: "ACTIVE",
+    kycVerified: true,
   },
-}
+  {
+    memberNumber: "MBR-002",
+    firstName: "Jane",
+    lastName: "Smith",
+    nationalId: "ID87654321",
+    phone: "0787654321",
+    email: "jane.smith@example.com",
+    address: "P.O. Box 456, Mombasa",
+    status: "ACTIVE",
+    kycVerified: false,
+  },
+]
 
-export const testLoans = {
-  personalLoan: {
-    amount: 50000,
-    purpose: "Business expansion",
-    term: 12,
+export const testLoans = [
+  {
+    principal: 50000,
     interestRate: 12,
+    termMonths: 12,
+    repaymentFrequency: "MONTHLY",
   },
-  emergencyLoan: {
-    amount: 25000,
-    purpose: "Medical emergency",
-    term: 6,
+  {
+    principal: 100000,
     interestRate: 15,
+    termMonths: 24,
+    repaymentFrequency: "MONTHLY",
   },
-}
+]
 
-export const testContributions = {
-  monthly: {
+export const testContributions = [
+  {
     amount: 5000,
     type: "MONTHLY",
-    description: "Monthly contribution",
+    source: "MANUAL",
   },
-  special: {
+  {
     amount: 10000,
-    type: "SPECIAL",
-    description: "Special project contribution",
+    type: "SHARES",
+    source: "MPESA",
   },
-}
+]

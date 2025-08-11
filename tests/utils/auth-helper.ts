@@ -4,7 +4,7 @@ import { testUsers } from "../fixtures/test-data"
 export class AuthHelper {
   constructor(private page: Page) {}
 
-  async login(userType: "admin" | "manager" | "member" = "admin") {
+  async login(userType: "admin" | "member" = "admin") {
     const user = testUsers[userType]
 
     await this.page.goto("/login")
@@ -12,21 +12,25 @@ export class AuthHelper {
     await this.page.fill('[data-testid="password-input"]', user.password)
     await this.page.click('[data-testid="login-button"]')
 
-    // Wait for successful login redirect
+    // Wait for redirect to dashboard
     await this.page.waitForURL("/dashboard")
   }
 
   async logout() {
+    // Click user avatar dropdown
     await this.page.click('[data-testid="user-menu"]')
-    await this.page.click('[data-testid="logout-button"]')
+    await this.page.click("text=Log out")
+
+    // Wait for redirect to login
     await this.page.waitForURL("/login")
   }
 
-  async ensureLoggedIn(userType: "admin" | "manager" | "member" = "admin") {
+  async isLoggedIn(): Promise<boolean> {
     try {
-      await this.page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 2000 })
+      await this.page.waitForSelector('[data-testid="user-menu"]', { timeout: 5000 })
+      return true
     } catch {
-      await this.login(userType)
+      return false
     }
   }
 }

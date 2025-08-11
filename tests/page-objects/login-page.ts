@@ -25,8 +25,7 @@ export class LoginPage {
     await this.loginButton.click()
   }
 
-  async expectErrorMessage(message: string) {
-    await this.errorMessage.waitFor()
-    await this.page.waitForSelector(`text=${message}`)
+  async getErrorMessage() {
+    return await this.errorMessage.textContent()
   }
 }

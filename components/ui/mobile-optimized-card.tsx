@@ -1,30 +1,23 @@
 "use client"
 
-import type React from "react"
-
+import type * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { ChevronRight, MoreVertical } from "lucide-react"
-import { useState } from "react"
 
 interface MobileOptimizedCardProps {
-  title: string
+  title?: string
   subtitle?: string
   value?: string | number
   description?: string
+  children?: React.ReactNode
+  className?: string
+  clickable?: boolean
+  onClick?: () => void
   action?: {
     label: string
     onClick: () => void
   }
-  menu?: Array<{
-    label: string
-    onClick: () => void
-  }>
-  className?: string
-  children?: React.ReactNode
-  clickable?: boolean
-  onClick?: () => void
 }
 
 export function MobileOptimizedCard({
@@ -32,65 +25,64 @@ export function MobileOptimizedCard({
   subtitle,
   value,
   description,
-  action,
-  menu,
-  className,
   children,
+  className,
   clickable = false,
   onClick,
+  action,
 }: MobileOptimizedCardProps) {
-  const [isPressed, setIsPressed] = useState(false)
-
-  const handleTouchStart = () => setIsPressed(true)
-  const handleTouchEnd = () => setIsPressed(false)
+  const CardWrapper = clickable ? "button" : "div"
 
   return (
     <Card
       className={cn(
-        "transition-all duration-200 active:scale-[0.98]",
-        clickable && "cursor-pointer hover:shadow-md",
-        isPressed && "shadow-lg scale-[0.98]",
+        "transition-all duration-200",
+        clickable && "cursor-pointer hover:shadow-md active:scale-[0.98] touch-manipulation",
         className,
       )}
-      onClick={onClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      data-testid="mobile-card"
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-base font-semibold truncate">{title}</CardTitle>
-            {subtitle && <p className="text-sm text-muted-foreground mt-1 truncate">{subtitle}</p>}
+      <CardWrapper
+        onClick={onClick}
+        className={cn(
+          "w-full text-left",
+          clickable && "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg",
+        )}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              {title && <CardTitle className="text-base font-medium truncate">{title}</CardTitle>}
+              {subtitle && <p className="text-sm text-muted-foreground mt-1 truncate">{subtitle}</p>}
+            </div>
+            {value && (
+              <div className="text-right ml-2">
+                <p className="text-lg font-semibold">{value}</p>
+              </div>
+            )}
           </div>
-          <div className="flex items-center space-x-2 ml-2">
-            {menu && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                <MoreVertical className="h-4 w-4" />
+        </CardHeader>
+
+        {(children || description || action) && (
+          <CardContent className="pt-0">
+            {children}
+            {description && <p className="text-sm text-muted-foreground">{description}</p>}
+            {action && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  action.onClick()
+                }}
+                className="mt-2 w-full"
+              >
+                {action.label}
               </Button>
             )}
-            {clickable && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-0">
-        {value && (
-          <div className="mb-3">
-            <div className="text-2xl font-bold">{value}</div>
-            {description && <p className="text-sm text-muted-foreground">{description}</p>}
-          </div>
+          </CardContent>
         )}
-
-        {children}
-
-        {action && (
-          <div className="mt-4">
-            <Button onClick={action.onClick} className="w-full h-11 text-base font-medium">
-              {action.label}
-            </Button>
-          </div>
-        )}
-      </CardContent>
+      </CardWrapper>
     </Card>
   )
 }

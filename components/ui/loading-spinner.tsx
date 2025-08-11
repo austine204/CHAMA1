@@ -15,23 +15,24 @@ export function LoadingSpinner({ size = "md", className }: LoadingSpinnerProps) 
   return (
     <div
       className={cn(
-        "animate-spin rounded-full border-2 border-primary border-t-transparent",
+        "animate-spin rounded-full border-2 border-current border-t-transparent",
         sizeClasses[size],
         className,
       )}
-    />
+      data-testid="loading-spinner"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
   )
 }
 
-export function LoadingCard() {
+export function LoadingCard({ className }: { className?: string }) {
   return (
-    <div className="animate-pulse">
-      <div className="rounded-lg border bg-card p-6">
-        <div className="space-y-3">
-          <div className="h-4 bg-muted rounded w-3/4"></div>
-          <div className="h-4 bg-muted rounded w-1/2"></div>
-          <div className="h-4 bg-muted rounded w-5/6"></div>
-        </div>
+    <div className={cn("animate-pulse", className)} data-testid="loading-card">
+      <div className="rounded-lg border bg-card p-6 space-y-3">
+        <div className="h-4 bg-muted rounded w-3/4"></div>
+        <div className="h-3 bg-muted rounded w-1/2"></div>
+        <div className="h-3 bg-muted rounded w-2/3"></div>
       </div>
     </div>
   )

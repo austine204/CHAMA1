@@ -1,10 +1,10 @@
+"use client"
+
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db/memory"
-import { StatsCard } from "@/components/ui/stats-card"
 import { PageHeader } from "@/components/ui/page-header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, CreditCard, DollarSign, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react"
-import Link from "next/link"
+import { MobileOptimizedCard } from "@/components/ui/mobile-optimized-card"
+import { CreditCard, DollarSign, TrendingUp, AlertTriangle, CheckCircle, Plus } from "lucide-react"
 import { StatusBadge } from "@/components/ui/status-badge"
 
 export default async function DashboardPage() {
@@ -23,146 +23,185 @@ export default async function DashboardPage() {
   const pendingTransactions = transactions.filter((t) => t.status === "PENDING").length
 
   // Recent activities
-  const recentLoans = loans.slice(-5).reverse()
-  const recentContributions = contributions.slice(-5).reverse()
+  const recentLoans = loans.slice(-3).reverse()
+  const recentContributions = contributions.slice(-3).reverse()
 
   return (
-    <div className="space-y-8 p-8 animate-fade-in">
+    <div className="space-y-6 p-4 md:p-8 animate-fade-in">
       <PageHeader title="Dashboard" description="Overview of your SACCO operations" />
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Members"
+      {/* Mobile-First Stats Grid */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <MobileOptimizedCard
+          title="Members"
           value={members.length}
-          change={{ value: 12, label: "from last month" }}
-          icon={Users}
-          trend="up"
+          description="+12 from last month"
+          clickable
+          onClick={() => (window.location.href = "/members")}
         />
-        <StatsCard
+        <MobileOptimizedCard
           title="Active Loans"
           value={activeLoans}
-          change={{ value: 8, label: "from last month" }}
-          icon={CreditCard}
-          trend="up"
+          description="+8 from last month"
+          clickable
+          onClick={() => (window.location.href = "/loans")}
         />
-        <StatsCard
-          title="Total Contributions"
-          value={`KES ${totalContributions.toLocaleString()}`}
-          change={{ value: 15, label: "from last month" }}
-          icon={DollarSign}
-          trend="up"
+        <MobileOptimizedCard
+          title="Contributions"
+          value={`KES ${(totalContributions / 1000).toFixed(0)}K`}
+          description="+15% from last month"
+          clickable
+          onClick={() => (window.location.href = "/members")}
+          className="col-span-2 lg:col-span-1"
         />
-        <StatsCard
+        <MobileOptimizedCard
           title="Loan Portfolio"
-          value={`KES ${totalLoanValue.toLocaleString()}`}
-          change={{ value: 5, label: "from last month" }}
-          icon={TrendingUp}
-          trend="up"
+          value={`KES ${(totalLoanValue / 1000000).toFixed(1)}M`}
+          description="+5% from last month"
+          clickable
+          onClick={() => (window.location.href = "/loans")}
+          className="col-span-2 lg:col-span-1"
         />
       </div>
 
-      {/* Alerts */}
+      {/* Alerts - Mobile Optimized */}
       {(delinquentLoans > 0 || pendingTransactions > 0) && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-3">
           {delinquentLoans > 0 && (
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <CardTitle className="text-sm font-medium text-red-800 ml-2">Attention Required</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-red-700">
-                  {delinquentLoans} loan{delinquentLoans > 1 ? "s" : ""} in arrears requiring follow-up
-                </p>
-              </CardContent>
-            </Card>
+            <MobileOptimizedCard
+              title="Attention Required"
+              subtitle={`${delinquentLoans} loan${delinquentLoans > 1 ? "s" : ""} in arrears requiring follow-up`}
+              className="border-red-200 bg-red-50"
+              action={{
+                label: "Review Loans",
+                onClick: () => (window.location.href = "/loans"),
+              }}
+            >
+              <div className="flex items-center text-red-600">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                <span className="font-medium">Urgent</span>
+              </div>
+            </MobileOptimizedCard>
           )}
 
           {pendingTransactions > 0 && (
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-                <CheckCircle className="h-4 w-4 text-yellow-600" />
-                <CardTitle className="text-sm font-medium text-yellow-800 ml-2">Pending Reconciliation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-yellow-700">
-                  {pendingTransactions} transaction{pendingTransactions > 1 ? "s" : ""} awaiting reconciliation
-                </p>
-              </CardContent>
-            </Card>
+            <MobileOptimizedCard
+              title="Pending Reconciliation"
+              subtitle={`${pendingTransactions} transaction${pendingTransactions > 1 ? "s" : ""} awaiting reconciliation`}
+              className="border-yellow-200 bg-yellow-50"
+              action={{
+                label: "Reconcile Now",
+                onClick: () => (window.location.href = "/payments"),
+              }}
+            >
+              <div className="flex items-center text-yellow-600">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                <span className="font-medium">Review Required</span>
+              </div>
+            </MobileOptimizedCard>
           )}
         </div>
       )}
 
-      {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Recent Loans
-              <Link href="/loans" className="text-sm text-primary hover:underline">
-                View all
-              </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {recentLoans.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent loans</p>
-            ) : (
-              recentLoans.map((loan) => {
+      {/* Quick Actions - Mobile First */}
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+        <MobileOptimizedCard
+          title="New Member"
+          clickable
+          onClick={() => (window.location.href = "/members/new")}
+          className="h-20"
+        >
+          <div className="flex items-center justify-center">
+            <Plus className="h-6 w-6 text-primary" />
+          </div>
+        </MobileOptimizedCard>
+
+        <MobileOptimizedCard
+          title="Loan Application"
+          clickable
+          onClick={() => (window.location.href = "/loans/new")}
+          className="h-20"
+        >
+          <div className="flex items-center justify-center">
+            <CreditCard className="h-6 w-6 text-primary" />
+          </div>
+        </MobileOptimizedCard>
+
+        <MobileOptimizedCard
+          title="M-Pesa Payment"
+          clickable
+          onClick={() => (window.location.href = "/payments")}
+          className="h-20"
+        >
+          <div className="flex items-center justify-center">
+            <DollarSign className="h-6 w-6 text-primary" />
+          </div>
+        </MobileOptimizedCard>
+
+        <MobileOptimizedCard
+          title="Reports"
+          clickable
+          onClick={() => (window.location.href = "/reports")}
+          className="h-20"
+        >
+          <div className="flex items-center justify-center">
+            <TrendingUp className="h-6 w-6 text-primary" />
+          </div>
+        </MobileOptimizedCard>
+      </div>
+
+      {/* Recent Activity - Mobile Optimized */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Recent Activity</h2>
+
+        <div className="space-y-3">
+          <h3 className="text-base font-medium text-muted-foreground">Recent Loans</h3>
+          {recentLoans.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No recent loans</p>
+          ) : (
+            <div className="space-y-2">
+              {recentLoans.map((loan) => {
                 const member = members.find((m) => m.id === loan.memberId)
                 return (
-                  <div key={loan.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {member ? `${member.firstName} ${member.lastName}` : "Unknown Member"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">KES {loan.principal.toLocaleString()}</p>
-                    </div>
+                  <MobileOptimizedCard
+                    key={loan.id}
+                    title={member ? `${member.firstName} ${member.lastName}` : "Unknown Member"}
+                    subtitle={`KES ${loan.principal.toLocaleString()}`}
+                    clickable
+                    onClick={() => (window.location.href = `/loans/${loan.id}`)}
+                  >
                     <StatusBadge status={loan.status} />
-                  </div>
+                  </MobileOptimizedCard>
                 )
-              })
-            )}
-          </CardContent>
-        </Card>
+              })}
+            </div>
+          )}
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Recent Contributions
-              <Link href="/members" className="text-sm text-primary hover:underline">
-                View all
-              </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {recentContributions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent contributions</p>
-            ) : (
-              recentContributions.map((contrib) => {
+        <div className="space-y-3">
+          <h3 className="text-base font-medium text-muted-foreground">Recent Contributions</h3>
+          {recentContributions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No recent contributions</p>
+          ) : (
+            <div className="space-y-2">
+              {recentContributions.map((contrib) => {
                 const member = members.find((m) => m.id === contrib.memberId)
                 return (
-                  <div key={contrib.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {member ? `${member.firstName} ${member.lastName}` : "Unknown Member"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {contrib.type} • {contrib.source}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">KES {contrib.amount.toLocaleString()}</p>
-                      <StatusBadge status={contrib.status} />
-                    </div>
-                  </div>
+                  <MobileOptimizedCard
+                    key={contrib.id}
+                    title={member ? `${member.firstName} ${member.lastName}` : "Unknown Member"}
+                    subtitle={`${contrib.type} • ${contrib.source}`}
+                    value={`KES ${contrib.amount.toLocaleString()}`}
+                    clickable
+                    onClick={() => (window.location.href = `/members/${contrib.memberId}`)}
+                  >
+                    <StatusBadge status={contrib.status} />
+                  </MobileOptimizedCard>
                 )
-              })
-            )}
-          </CardContent>
-        </Card>
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

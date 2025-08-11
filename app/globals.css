@@ -65,6 +65,33 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent zoom on iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+  }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    body {
+      /* Prevent horizontal scroll */
+      overflow-x: hidden;
+    }
+
+    /* Larger touch targets */
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      min-height: 44px;
+    }
+
+    /* Better text rendering on mobile */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
   }
 }
 
@@ -79,6 +106,32 @@
 
   .animate-pulse-subtle {
     animation: pulseSubtle 2s infinite;
+  }
+
+  /* Mobile-specific animations */
+  .mobile-tap-highlight {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease;
+  }
+
+  .mobile-tap-highlight:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+
+  /* Safe area handling for notched devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Improved scrolling on mobile */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 }
 
@@ -114,6 +167,70 @@
   }
 }
 
+/* Mobile-first responsive utilities */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-padding {
+    @apply px-4 py-2;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-padding {
+      @apply px-8 py-4;
+    }
+  }
+
+  /* Responsive text sizes */
+  .text-responsive-xs {
+    @apply text-xs;
+  }
+
+  .text-responsive-sm {
+    @apply text-sm;
+  }
+
+  .text-responsive-base {
+    @apply text-sm;
+  }
+
+  .text-responsive-lg {
+    @apply text-base;
+  }
+
+  .text-responsive-xl {
+    @apply text-lg;
+  }
+
+  @media (min-width: 768px) {
+    .text-responsive-xs {
+      @apply text-sm;
+    }
+
+    .text-responsive-sm {
+      @apply text-base;
+    }
+
+    .text-responsive-base {
+      @apply text-base;
+    }
+
+    .text-responsive-lg {
+      @apply text-lg;
+    }
+
+    .text-responsive-xl {
+      @apply text-xl;
+    }
+  }
+}
+
 .gradient-bg {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
@@ -122,4 +239,21 @@
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* PWA-like mobile experience */
+@media (display-mode: standalone) {
+  body {
+    /* Hide browser UI when installed as PWA */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .crisp-edges {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
 }

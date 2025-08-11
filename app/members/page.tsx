@@ -1,14 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { PageHeader } from "@/components/ui/page-header"
-import { DataTable } from "@/components/ui/data-table"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { Button } from "@/components/ui/button"
+import { MobileDataTable } from "@/components/ui/mobile-data-table"
 import { LoadingCard } from "@/components/ui/loading-spinner"
-import { Plus, Eye, Edit } from "lucide-react"
-import type { ColumnDef } from "@tanstack/react-table"
+import { Plus } from "lucide-react"
 
 interface Member {
   id: string
@@ -21,66 +17,6 @@ interface Member {
   kycVerified: boolean
   joinDate: string
 }
-
-const columns: ColumnDef<Member>[] = [
-  {
-    accessorKey: "memberNumber",
-    header: "Member No.",
-  },
-  {
-    accessorKey: "firstName",
-    header: "Name",
-    cell: ({ row }) => {
-      const member = row.original
-      return (
-        <div>
-          <div className="font-medium">
-            {member.firstName} {member.lastName}
-          </div>
-          <div className="text-sm text-muted-foreground">{member.email}</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "phone",
-    header: "Phone",
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <StatusBadge status={row.getValue("status")} />,
-  },
-  {
-    accessorKey: "kycVerified",
-    header: "KYC",
-    cell: ({ row }) => <StatusBadge status={row.getValue("kycVerified") ? "CONFIRMED" : "PENDING"} />,
-  },
-  {
-    accessorKey: "joinDate",
-    header: "Join Date",
-    cell: ({ row }) => new Date(row.getValue("joinDate")).toLocaleDateString(),
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => {
-      const member = row.original
-      return (
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/members/${member.id}`}>
-              <Eye className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Edit className="h-4 w-4" />
-          </Button>
-        </div>
-      )
-    },
-  },
-]
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([])
@@ -98,9 +34,9 @@ export default function MembersPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8 p-8">
+      <div className="space-y-6 p-4 md:p-8">
         <PageHeader title="Members" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <LoadingCard key={i} />
           ))}
@@ -109,11 +45,36 @@ export default function MembersPage() {
     )
   }
 
+  // Transform members data for mobile table
+  const mobileData = members.map((member) => ({
+    id: member.id,
+    title: `${member.firstName} ${member.lastName}`,
+    subtitle: member.email || member.phone,
+    status: member.status,
+    value: member.memberNumber,
+    metadata: [
+      { label: "Phone", value: member.phone },
+      { label: "KYC Status", value: member.kycVerified ? "Verified" : "Pending" },
+      { label: "Join Date", value: new Date(member.joinDate).toLocaleDateString() },
+      { label: "Status", value: member.status },
+    ],
+    actions: [
+      {
+        label: "View Profile",
+        onClick: () => (window.location.href = `/members/${member.id}`),
+      },
+      {
+        label: "Edit",
+        onClick: () => console.log("Edit member", member.id),
+      },
+    ],
+  }))
+
   return (
-    <div className="space-y-8 p-8 animate-fade-in">
+    <div className="space-y-6 p-4 md:p-8 animate-fade-in">
       <PageHeader
         title="Members"
-        description="Manage your SACCO members and their information"
+        description={`${members.length} total members`}
         action={{
           label: "Add Member",
           onClick: () => (window.location.href = "/members/new"),
@@ -121,7 +82,12 @@ export default function MembersPage() {
         }}
       />
 
-      <DataTable columns={columns} data={members} searchKey="firstName" searchPlaceholder="Search members..." />
+      <MobileDataTable
+        data={mobileData}
+        searchPlaceholder="Search members..."
+        onItemClick={(item) => (window.location.href = `/members/${item.id}`)}
+        emptyMessage="No members found"
+      />
     </div>
   )
 }

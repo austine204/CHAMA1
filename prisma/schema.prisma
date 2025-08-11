@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/*
+Core domain enums
+*/
+enum UserRole {
+  SUPER_ADMIN
+  SACCO_ADMIN
+  LOAN_OFFICER
+  FINANCE_OFFICER
+  MEMBER
+  AUDITOR
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  DISBURSED
+  IN_ARREARS
+  CLOSED
+  WRITTEN_OFF
+  REJECTED
+}
+
+enum RepaymentFrequency {
+  MONTHLY
+  WEEKLY
+  BIWEEKLY
+}
+
+enum ContributionType {
+  SHARE_CAPITAL
+  SAVINGS
+  OTHER
+}
+
+enum ContributionStatus {
+  PENDING
+  CONFIRMED
+  REVERSED
+}
+
+enum PaymentProvider {
+  MPESA
+  BANK
+  MANUAL
+  AIRTEL
+  OTHER
+}
+
+enum PaymentType {
+  CONTRIBUTION
+  REPAYMENT
+  DISBURSEMENT
+  FEE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REVERSED
+}
+
+/*
+Models
+*/
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  // Optional linkage to a Member record if this user is a member
+  memberId     String?  @unique
+  member       Member?  @relation(fields: [memberId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Member {
+  id            String   @id @default(cuid())
+  saccoId       String?  // for multi-tenant support; can index/group by SACCO
+  memberNumber  String   @unique
+  firstName     String
+  lastName      String
+  nationalId    String   @unique
+  phone         String
+  email         String?
+  address       String?
+  joinDate      DateTime
+  status        MemberStatus
+  kycVerified   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contributions Contribution[]
+  loans         Loan[]
+
+  @@index([saccoId])
+  @@index([status])
+}
+
+model Loan {
+  id                    String            @id @default(cuid())
+  memberId              String
+  member                Member            @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  productId             String?           // reference to LoanProduct model (to be added in later task)
+  principal             Decimal           @db.Numeric(18, 2)
+  interestRate          Decimal           @db.Numeric(5, 2) // percentage per annum
+  termMonths            Int
+  repaymentFrequency    RepaymentFrequency
+  status                LoanStatus        @default(PENDING)
+  disbursedAt           DateTime?
+  principalOutstanding  Decimal           @db.Numeric(18, 2) @default(0)
+  interestAccrued       Decimal           @db.Numeric(18, 2) @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  repayments            Repayment[]
+
+  @@index([memberId])
+  @@index([status])
+}
+
+model Repayment {
+  id                 String   @id @default(cuid())
+  loanId             String
+  loan               Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  amount             Decimal  @db.Numeric(18, 2)
+  interestComponent  Decimal  @db.Numeric(18, 2) @default(0)
+  principalComponent Decimal  @db.Numeric(18, 2) @default(0)
+  date               DateTime
+  source             String
+  reference          String?
+  createdAt          DateTime @default(now())
+
+  @@index([loanId, date])
+  @@index([reference])
+}
+
+model Contribution {
+  id                     String             @id @default(cuid())
+  memberId               String
+  member                 Member             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  amount                 Decimal            @db.Numeric(18, 2)
+  date                   DateTime
+  type                   ContributionType
+  source                 String
+  reference              String?
+  status                 ContributionStatus @default(PENDING)
+  paymentTransactionId   String?
+  paymentTransaction     PaymentTransaction? @relation(fields: [paymentTransactionId], references: [id])
+  createdAt              DateTime @default(now())
+
+  @@index([memberId, date])
+  @@index([status])
+  @@index([paymentTransactionId])
+}
+
+model PaymentTransaction {
+  id              String          @id @default(cuid())
+  provider        PaymentProvider
+  type            PaymentType
+  status          PaymentStatus   @default(PENDING)
+  memberId        String?
+  member          Member?         @relation(fields: [memberId], references: [id])
+  loanId          String?
+  loan            Loan?           @relation(fields: [loanId], references: [id])
+  amount          Decimal         @db.Numeric(18, 2)
+  currency        String          @default("KES")
+  phone           String?
+  externalId      String?         @unique // provider transaction id
+  accountRef      String?
+  idempotencyKey  String?         @unique
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  contributions   Contribution[]
+  @@index([status])
+  @@index([memberId])
+  @@index([loanId])
+}
+
+model JournalEntry {
+  id            String   @id @default(cuid())
+  date          DateTime @default(now())
+  description   String?
+  // Using string account codes for now; ChartOfAccounts model comes later
+  debitAccount  String
+  creditAccount String
+  amount        Decimal  @db.Numeric(18, 2)
+  referenceType String?  // e.g., "Loan", "Contribution", "Repayment"
+  referenceId   String?
+  createdAt     DateTime @default(now())
+
+  @@index([date])
+  @@index([referenceType, referenceId])
+}

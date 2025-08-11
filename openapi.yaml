@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: SACCO ERP API
+  version: "0.1.0"
+paths:
+  /api/members:
+    get:
+      summary: List members
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create member
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "201": { description: Created }
+        "400": { description: Bad Request }
+  /api/members/{id}:
+    get:
+      summary: Get member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+        "404": { description: Not found }
+    patch:
+      summary: Update member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "200": { description: OK }
+        "400": { description: Bad Request }
+        "404": { description: Not found }
+  /api/loans:
+    get: { summary: List loans, responses: { "200": { description: OK } } }
+    post:
+      summary: Create loan application
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "201": { description: Created with amortization }
+        "400": { description: Bad Request }
+  /api/loans/{id}/approve:
+    post:
+      summary: Approve loan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Approved with schedule }
+        "400": { description: Error }
+  /api/loans/{id}/disburse:
+    post:
+      summary: Disburse loan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Disbursed }
+  /api/loans/{id}/repay:
+    post:
+      summary: Register repayment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "200": { description: OK }
+        "400": { description: Error }
+  /api/loans/{id}/schedule:
+    get:
+      summary: Amortization schedule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /api/contributions:
+    post:
+      summary: Record contribution
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "201": { description: Created }
+  /api/members/{id}/contributions:
+    get:
+      summary: List contributions for member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /api/payments/mpesa/stk:
+    post:
+      summary: Initiate STK Push
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "200": { description: OK }
+  /api/payments/mpesa/webhook:
+    post:
+      summary: Receive M-Pesa webhook
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        "200": { description: OK }
+  /api/collections/reconcile:
+    post:
+      summary: Reconcile pending transactions
+      responses:
+        "200": { description: OK }

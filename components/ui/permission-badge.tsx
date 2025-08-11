@@ -1,37 +1,35 @@
-"use client"
-
 import { Badge } from "@/components/ui/badge"
-import { Shield, Eye, Edit, Trash2, Plus } from "lucide-react"
+import { Shield, Eye, Edit, Plus, Trash2, Settings } from "lucide-react"
 
 interface PermissionBadgeProps {
   permission: string
-  variant?: "default" | "secondary" | "destructive" | "outline"
+  size?: "sm" | "md" | "lg"
 }
 
-export function PermissionBadge({ permission, variant = "outline" }: PermissionBadgeProps) {
-  const getPermissionIcon = (perm: string) => {
-    if (perm.includes("read")) return <Eye className="h-3 w-3" />
-    if (perm.includes("create")) return <Plus className="h-3 w-3" />
-    if (perm.includes("update")) return <Edit className="h-3 w-3" />
-    if (perm.includes("delete")) return <Trash2 className="h-3 w-3" />
-    if (perm === "*") return <Shield className="h-3 w-3" />
-    return <Shield className="h-3 w-3" />
-  }
+const PERMISSION_CONFIG: Record<string, { icon: any; color: string; label: string }> = {
+  read: { icon: Eye, color: "bg-blue-100 text-blue-800", label: "Read" },
+  create: { icon: Plus, color: "bg-green-100 text-green-800", label: "Create" },
+  update: { icon: Edit, color: "bg-yellow-100 text-yellow-800", label: "Update" },
+  delete: { icon: Trash2, color: "bg-red-100 text-red-800", label: "Delete" },
+  "*": { icon: Shield, color: "bg-purple-100 text-purple-800", label: "Full Access" },
+  approve: { icon: Settings, color: "bg-orange-100 text-orange-800", label: "Approve" },
+}
 
-  const getPermissionColor = (perm: string) => {
-    if (perm === "*") return "bg-red-100 text-red-800 border-red-200"
-    if (perm.includes("delete")) return "bg-red-50 text-red-700 border-red-200"
-    if (perm.includes("create") || perm.includes("update")) return "bg-orange-50 text-orange-700 border-orange-200"
-    return "bg-blue-50 text-blue-700 border-blue-200"
+export function PermissionBadge({ permission, size = "sm" }: PermissionBadgeProps) {
+  const [resource, action] = permission.split(":")
+  const config = PERMISSION_CONFIG[action] || PERMISSION_CONFIG["read"]
+  const Icon = config.icon
+
+  const sizeClasses = {
+    sm: "text-xs px-2 py-1",
+    md: "text-sm px-3 py-1",
+    lg: "text-base px-4 py-2",
   }
 
   return (
-    <Badge
-      variant={variant}
-      className={`flex items-center gap-1 ${variant === "outline" ? getPermissionColor(permission) : ""}`}
-    >
-      {getPermissionIcon(permission)}
-      <span className="text-xs">{permission}</span>
+    <Badge className={`${config.color} ${sizeClasses[size]} font-medium`}>
+      <Icon className="h-3 w-3 mr-1" />
+      {resource}:{config.label}
     </Badge>
   )
 }

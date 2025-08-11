@@ -1,15 +1,27 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { RoleBasedAccessControl } from "@/lib/auth/rbac"
 import type { UserRole } from "@/lib/types/roles"
 import bcrypt from "bcryptjs"
-import { db } from "@/lib/db/memory"
 
-export async function GET(request: NextRequest) {
+// Mock users database - replace with real database
+const users = [
+  {
+    id: "1",
+    email: "admin@sacco.local",
+    firstName: "System",
+    lastName: "Administrator",
+    role: "SUPER_ADMIN" as UserRole,
+    status: "ACTIVE" as const,
+    createdAt: new Date(),
+    lastLogin: new Date(),
+    saccoId: null,
+  },
+]
+
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-
+    const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -20,26 +32,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const users = db.users.map((user) => ({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      memberId: user.memberId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }))
-
-    return NextResponse.json(users)
+    return NextResponse.json({ users })
   } catch (error) {
-    console.error("Error fetching users:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
+    const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -50,40 +51,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { email, role, password } = await request.json()
+    const body = await request.json()
+    const { email, firstName, lastName, role, password } = body
 
     // Validate that user can assign this role
-    if (!RoleBasedAccessControl.canManageRole(userRole, role)) {
+    if (!RoleBasedAccessControl.canManageUser(userRole, role)) {
       return NextResponse.json({ error: "Cannot assign this role" }, { status: 403 })
-    }
-
-    // Check if user already exists
-    const existingUser = db.users.find((u) => u.email === email)
-    if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 })
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create new user
     const newUser = {
-      id: `user_${Date.now()}`,
+      id: Date.now().toString(),
       email,
-      role: role as UserRole,
-      password: hashedPassword,
-      memberId: null,
+      firstName,
+      lastName,
+      role,
+      status: "ACTIVE" as const,
       createdAt: new Date(),
-      updatedAt: new Date(),
+      saccoId: (session.user as any).saccoId || null,
     }
 
-    db.users.push(newUser)
+    users.push(newUser)
 
-    // Return user without password
-    const { password: _, ...userResponse } = newUser
-    return NextResponse.json(userResponse, { status: 201 })
+    return NextResponse.json({ user: newUser })
   } catch (error) {
-    console.error("Error creating user:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

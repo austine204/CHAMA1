@@ -1,33 +1,35 @@
 "use client"
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { type UserRole, ROLE_DEFINITIONS } from "@/lib/types/roles"
-import { RoleBasedAccessControl } from "@/lib/auth/rbac"
-import { useSession } from "next-auth/react"
+import { RoleBadge } from "@/components/auth/role-badge"
+import type { UserRole } from "@/lib/types/roles"
+import { ROLE_DEFINITIONS } from "@/lib/types/roles"
 
 interface RoleSelectorProps {
-  value?: UserRole
-  onValueChange: (role: UserRole) => void
+  value: UserRole
+  onChange: (role: UserRole) => void
+  availableRoles?: UserRole[]
   disabled?: boolean
 }
 
-export function RoleSelector({ value, onValueChange, disabled }: RoleSelectorProps) {
-  const { data: session } = useSession()
-  const userRole = (session?.user as any)?.role as UserRole
-
-  const availableRoles = userRole ? RoleBasedAccessControl.getAvailableRoles(userRole) : []
-
+export function RoleSelector({
+  value,
+  onChange,
+  availableRoles = Object.keys(ROLE_DEFINITIONS) as UserRole[],
+  disabled = false,
+}: RoleSelectorProps) {
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
-      <SelectTrigger>
-        <SelectValue placeholder="Select a role" />
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger className="w-full">
+        <SelectValue>
+          <RoleBadge role={value} />
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {availableRoles.map((role) => (
           <SelectItem key={role} value={role}>
-            <div className="flex flex-col">
-              <span className="font-medium">{ROLE_DEFINITIONS[role].displayName}</span>
-              <span className="text-xs text-muted-foreground">{ROLE_DEFINITIONS[role].description}</span>
+            <div className="flex items-center justify-between w-full">
+              <RoleBadge role={role} />
+              <span className="text-xs text-muted-foreground ml-2">Level {ROLE_DEFINITIONS[role].level}</span>
             </div>
           </SelectItem>
         ))}

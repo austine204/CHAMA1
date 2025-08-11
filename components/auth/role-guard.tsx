@@ -1,18 +1,19 @@
 "use client"
 
+import type React from "react"
+
 import { useSession } from "next-auth/react"
 import type { UserRole } from "@/lib/types/roles"
 import { RoleBasedAccessControl } from "@/lib/auth/rbac"
-import type { ReactNode } from "react"
 
 interface RoleGuardProps {
-  children: ReactNode
+  children: React.ReactNode
   allowedRoles?: UserRole[]
   requiredPermission?: {
     resource: string
     action: string
   }
-  fallback?: ReactNode
+  fallback?: React.ReactNode
 }
 
 export function RoleGuard({ children, allowedRoles, requiredPermission, fallback = null }: RoleGuardProps) {

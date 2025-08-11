@@ -1,14 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { RoleBasedAccessControl } from "@/lib/auth/rbac"
 import type { UserRole } from "@/lib/types/roles"
-import { db } from "@/lib/db/memory"
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+// Mock users database - replace with real database
+const users = [
+  {
+    id: "1",
+    email: "admin@sacco.local",
+    firstName: "System",
+    lastName: "Administrator",
+    role: "SUPER_ADMIN" as UserRole,
+    status: "ACTIVE" as const,
+    createdAt: new Date(),
+    lastLogin: new Date(),
+    saccoId: null,
+  },
+]
+
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions)
-
+    const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -19,43 +31,44 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { id } = params
-    const updates = await request.json()
+    const body = await request.json()
+    const { firstName, lastName, role, status } = body
 
-    const userIndex = db.users.findIndex((u) => u.id === id)
+    const userIndex = users.findIndex((u) => u.id === params.id)
     if (userIndex === -1) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const targetUser = db.users[userIndex]
+    const targetUser = users[userIndex]
 
-    // If updating role, check permissions
-    if (updates.role && updates.role !== targetUser.role) {
-      if (!RoleBasedAccessControl.canManageRole(userRole, updates.role)) {
-        return NextResponse.json({ error: "Cannot assign this role" }, { status: 403 })
-      }
+    // Validate that user can manage this target user
+    if (!RoleBasedAccessControl.canManageUser(userRole, targetUser.role)) {
+      return NextResponse.json({ error: "Cannot manage this user" }, { status: 403 })
+    }
+
+    // Validate that user can assign the new role
+    if (role && !RoleBasedAccessControl.canManageUser(userRole, role)) {
+      return NextResponse.json({ error: "Cannot assign this role" }, { status: 403 })
     }
 
     // Update user
-    db.users[userIndex] = {
+    users[userIndex] = {
       ...targetUser,
-      ...updates,
-      updatedAt: new Date(),
+      firstName: firstName || targetUser.firstName,
+      lastName: lastName || targetUser.lastName,
+      role: role || targetUser.role,
+      status: status || targetUser.status,
     }
 
-    // Return updated user without password
-    const { password: _, ...userResponse } = db.users[userIndex]
-    return NextResponse.json(userResponse)
+    return NextResponse.json({ user: users[userIndex] })
   } catch (error) {
-    console.error("Error updating user:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions)
-
+    const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -66,26 +79,22 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { id } = params
-
-    const userIndex = db.users.findIndex((u) => u.id === id)
+    const userIndex = users.findIndex((u) => u.id === params.id)
     if (userIndex === -1) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const targetUser = db.users[userIndex]
+    const targetUser = users[userIndex]
 
-    // Check if can delete this user's role
-    if (!RoleBasedAccessControl.canManageRole(userRole, targetUser.role)) {
+    // Validate that user can manage this target user
+    if (!RoleBasedAccessControl.canManageUser(userRole, targetUser.role)) {
       return NextResponse.json({ error: "Cannot delete this user" }, { status: 403 })
     }
 
-    // Remove user
-    db.users.splice(userIndex, 1)
+    users.splice(userIndex, 1)
 
-    return NextResponse.json({ message: "User deleted successfully" })
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting user:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

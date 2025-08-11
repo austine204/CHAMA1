@@ -1,36 +1,26 @@
-"use client"
-
 import { Badge } from "@/components/ui/badge"
-import { type UserRole, ROLE_DEFINITIONS } from "@/lib/types/roles"
+import type { UserRole } from "@/lib/types/roles"
+import { ROLE_DEFINITIONS } from "@/lib/types/roles"
 
 interface RoleBadgeProps {
   role: UserRole
-  variant?: "default" | "secondary" | "destructive" | "outline"
+  showIcon?: boolean
+  size?: "sm" | "md" | "lg"
 }
 
-const ROLE_COLORS: Record<UserRole, string> = {
-  SUPER_ADMIN: "bg-red-500 text-white",
-  SACCO_ADMIN: "bg-purple-500 text-white",
-  LOAN_OFFICER: "bg-blue-500 text-white",
-  FINANCE_OFFICER: "bg-green-500 text-white",
-  AUDITOR: "bg-orange-500 text-white",
-  MEMBER: "bg-gray-500 text-white",
-}
-
-export function RoleBadge({ role, variant = "default" }: RoleBadgeProps) {
+export function RoleBadge({ role, showIcon = true, size = "md" }: RoleBadgeProps) {
   const roleDefinition = ROLE_DEFINITIONS[role]
 
-  if (!roleDefinition) {
-    return <Badge variant="outline">Unknown Role</Badge>
+  const sizeClasses = {
+    sm: "text-xs px-2 py-1",
+    md: "text-sm px-3 py-1",
+    lg: "text-base px-4 py-2",
   }
 
   return (
-    <Badge
-      variant={variant}
-      className={variant === "default" ? ROLE_COLORS[role] : ""}
-      title={roleDefinition.description}
-    >
-      {roleDefinition.displayName}
+    <Badge variant="outline" className={`${roleDefinition.color} ${sizeClasses[size]} font-medium`}>
+      {showIcon && <span className="mr-1">{roleDefinition.icon}</span>}
+      {role.replace("_", " ")}
     </Badge>
   )
 }

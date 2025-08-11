@@ -1,66 +1,73 @@
 export type UserRole = "SUPER_ADMIN" | "SACCO_ADMIN" | "LOAN_OFFICER" | "FINANCE_OFFICER" | "AUDITOR" | "MEMBER"
 
 export interface RoleDefinition {
-  displayName: string
-  description: string
+  name: UserRole
   level: number
+  description: string
   permissions: string[]
+  color: string
+  icon: string
 }
 
 export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {
   SUPER_ADMIN: {
-    displayName: "Super Administrator",
-    description: "Full system access across all SACCOs",
+    name: "SUPER_ADMIN",
     level: 100,
+    description: "Full system access across all SACCOs",
     permissions: ["*"],
+    color: "bg-red-100 text-red-800 border-red-200",
+    icon: "👑",
   },
   SACCO_ADMIN: {
-    displayName: "SACCO Administrator",
-    description: "Full administrative access to SACCO operations",
+    name: "SACCO_ADMIN",
     level: 90,
-    permissions: [
-      "members:*",
-      "loans:*",
-      "contributions:*",
-      "payments:*",
-      "reports:*",
-      "settings:*",
-      "users:create",
-      "users:read",
-      "users:update",
-    ],
+    description: "Full administrative access to SACCO",
+    permissions: ["members:*", "loans:*", "contributions:*", "payments:*", "reports:*", "settings:*"],
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: "🏛️",
   },
   LOAN_OFFICER: {
-    displayName: "Loan Officer",
-    description: "Manage loan applications and disbursements",
+    name: "LOAN_OFFICER",
     level: 70,
-    permissions: ["loans:*", "members:read", "reports:loans", "payments:read"],
+    description: "Loan management and approval",
+    permissions: ["loans:read", "loans:create", "loans:update", "loans:approve", "members:read", "reports:loans"],
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: "💳",
   },
   FINANCE_OFFICER: {
-    displayName: "Finance Officer",
-    description: "Manage financial operations and accounting",
+    name: "FINANCE_OFFICER",
     level: 70,
-    permissions: ["contributions:*", "payments:*", "reports:*", "accounting:*", "members:read", "loans:read"],
+    description: "Financial operations and accounting",
+    permissions: ["contributions:*", "payments:*", "reports:*", "members:read", "loans:read"],
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: "💰",
   },
   AUDITOR: {
-    displayName: "Auditor",
-    description: "Read-only access for auditing purposes",
+    name: "AUDITOR",
     level: 50,
+    description: "Read-only access for auditing",
     permissions: ["members:read", "loans:read", "contributions:read", "payments:read", "reports:read", "audit:read"],
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+    icon: "🔍",
   },
   MEMBER: {
-    displayName: "Member",
-    description: "Basic member access to personal account",
+    name: "MEMBER",
     level: 10,
-    permissions: ["profile:read", "profile:update", "contributions:read:own", "loans:read:own", "loans:apply"],
+    description: "Personal account access only",
+    permissions: ["profile:read", "profile:update", "contributions:own", "loans:own", "statements:own"],
+    color: "bg-gray-100 text-gray-800 border-gray-200",
+    icon: "👤",
   },
 }
 
-export const ROLE_HIERARCHY: UserRole[] = [
-  "SUPER_ADMIN",
-  "SACCO_ADMIN",
-  "LOAN_OFFICER",
-  "FINANCE_OFFICER",
-  "AUDITOR",
-  "MEMBER",
-]
+export interface User {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  role: UserRole
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"
+  createdAt: Date
+  lastLogin?: Date
+  saccoId?: string
+}
